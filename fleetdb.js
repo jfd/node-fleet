@@ -4,7 +4,7 @@
 //  
 //  Read README for instructions and LICENSE license.
 //  
-//  Copyright (c) 2009 Johan Dahlberg 
+//  Copyright (c) 2010 Johan Dahlberg 
 //
 var tcp = require('tcp'),
     uri = require('uri');
