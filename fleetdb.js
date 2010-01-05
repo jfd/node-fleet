@@ -18,7 +18,8 @@ exports.open = function(uri_addr, err_callback) {
       queue = [],
       q_stack = [],
       conn = tcp.createConnection(port, addr),
-      kill_signal = false;
+      kill_signal = false,
+      auto_kill_pid = 0;
 
   conn.setEncoding('utf8');
 
@@ -33,9 +34,12 @@ exports.open = function(uri_addr, err_callback) {
     var obj = JSON.parse(data);
     var callback = q_stack.pop();
     callback(obj[0], obj[1]);
-    if (kill_signal && !q_stack.length) {
+    if (kill_signal && q_stack.length == 0) {
       conn.close();
       conn = null;
+      if (auto_kill_pid != 0) {
+        clearTimeout(auto_kill_pid);
+      }
     }
   });
 
@@ -69,7 +73,7 @@ exports.open = function(uri_addr, err_callback) {
         kill_signal = true;
         
         // Kill anyway after KILL_TIMEOUT seconds.
-        setTimeout(function() {
+        auto_kill_pid = setTimeout(function() {
           if (conn != null) {
             conn.close();
             conn = null;
