@@ -9,7 +9,7 @@ Here is a quick example how to use the module:
 	    fleetdb = require('./inc-js/fleetdb');
 
 	var db = new fleetdb.fleetdb();
-	    db.open('127.0.0.1:3400');
+	    db.open('http://127.0.0.1:3400');
 
 	db.query(['ping'], function(status, data) {
   		sys.puts('Status: ' + status + ' Data:' + data);
