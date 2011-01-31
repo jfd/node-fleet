@@ -11,9 +11,9 @@ var net = require('net'),
     url = require('url'),
     sys = require('sys');
 
-var KILL_TIMEOUT = 6000;
+var KILL_TIMEOUT = 500;
 
-var fleetdb = exports.fleetdb = function ()
+var Database = exports.Database = function ()
 {
 	var self = this;
 	var options = {
@@ -29,16 +29,16 @@ var fleetdb = exports.fleetdb = function ()
 	return self;
 };
 
-fleetdb.prototype = {
-	constructor: fleetdb
+Database.prototype = {
+	constructor: Database
 };
 
-fleetdb.prototype.open = function (uri, callback)
+Database.prototype.open = function (uri, callback)
 {
 	var self = this;
 	var o	 = self.options;
 	
-  	var addr = url.parse(uri);
+  	var addr = url.parse(uri);  	
   	var port = addr.port || 3400,
       	addr = addr.url || '127.0.0.1';
 		
@@ -46,17 +46,15 @@ fleetdb.prototype.open = function (uri, callback)
   	o.conn.setEncoding('utf8');
 
 	o.conn.on('connect', function() {
-		var q = null;
-		while ((q = o.queue.pop())) {
-			o.conn.write(q);
-		}
+		var q = o.queue.pop();
+		o.conn.write(q);
 	});
 
-	o.conn.on('data', function(data) {
+	o.conn.on('data', function(data) {		
 		var obj = JSON.parse(data);
 		var callback = o.q_stack.pop();
 		callback(obj[0], obj[1]);
-		
+				
 		if (o.kill_signal && o.q_stack.length == 0) {
 			if(o.conn != null)
 			{
@@ -66,6 +64,10 @@ fleetdb.prototype.open = function (uri, callback)
 			if (o.auto_kill_pid != 0) {
 				clearTimeout(o.auto_kill_pid);
 			}
+		} else
+		{
+			var q = o.queue.pop();
+			o.conn.write(q);			
 		}
 	});
 
@@ -79,7 +81,7 @@ fleetdb.prototype.open = function (uri, callback)
  *  Query the  fleetdb server. The optional ««callback«« is called when
  *  the server returns a response.
  */
-fleetdb.prototype.query = function(q, callback)
+Database.prototype.query = function(q, callback)
 {
 	var self = this;
 	var o	 = self.options;
@@ -97,7 +99,7 @@ fleetdb.prototype.query = function(q, callback)
 /**
  *  Close the established connection with the server.
  */
-fleetdb.prototype.close = function()
+Database.prototype.close = function()
 {
 	var self = this;
 	var o	 = self.options;
