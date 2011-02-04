@@ -47,11 +47,21 @@ Database.prototype.open = function (uri, callback)
 
 	o.conn.on('connect', function() {
 		var q = o.queue.pop();
-		o.conn.write(q);
+		if(q != null)
+		{
+			o.conn.write(q);
+		}
 	});
 
-	o.conn.on('data', function(data) {		
-		var obj = JSON.parse(data);
+	o.conn.on('data', function(data) {
+
+	    try {
+			var obj = JSON.parse(data);
+	    } catch (SyntaxError) {
+	      console.log('Invalid JSON:');
+	      console.log(data);
+	      return false;
+	    }
 		var callback = o.q_stack.pop();
 		callback(obj[0], obj[1]);
 				
@@ -67,7 +77,10 @@ Database.prototype.open = function (uri, callback)
 		} else
 		{
 			var q = o.queue.pop();
-			o.conn.write(q);			
+			if((o.conn != null) && (q != null))
+			{
+				o.conn.write(q);
+			}			
 		}
 	});
 
